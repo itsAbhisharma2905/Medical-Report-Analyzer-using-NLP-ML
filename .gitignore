@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.env
+data/raw/*
+data/uploads/*
+data/processed/*.csv
+data/*.db
+models/*.joblib
+reports/*.pdf
+reports/*.json
+reports/figures/*.png
+!.gitkeep

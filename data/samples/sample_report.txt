@@ -1,0 +1,11 @@
+Patient Name: John Doe
+Age: 62
+Sex: Male
+Date: 2026-05-20
+
+Chief complaint: fever, cough, chest pain and shortness of breath for three days.
+History: hypertension and diabetes mellitus.
+Observation: BP 150/92, temperature 101.4 F, SPO2 94%.
+Diagnosis: pneumonia with uncontrolled hypertension.
+Medication: Amoxicillin 500 mg daily and Metformin 500 mg.
+Tests advised: CBC, chest X-ray, blood glucose.

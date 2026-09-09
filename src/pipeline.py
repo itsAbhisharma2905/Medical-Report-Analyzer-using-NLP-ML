@@ -16,12 +16,16 @@ from src.summarization import MedicalSummarizer
 class MedicalReportAnalyzer:
     def __init__(self) -> None:
         self.prep = MedicalTextPreprocessor()
-        self.extractor = PDFExtractor(enable_ocr=settings.enable_ocr)
+        self.extractor = PDFExtractor(
+            enable_ocr=settings.enable_ocr,
+            use_pdfplumber=not settings.is_serverless,
+        )
         self.ner = HybridMedicalNER(
             spacy_model=settings.spacy_model,
             scispacy_model=settings.scispacy_model,
             transformer_model=settings.transformer_ner_model,
             enable_transformers=settings.enable_transformers,
+            enable_spacy=not settings.is_serverless,
         )
         self.summarizer = MedicalSummarizer(settings.summarizer_model, settings.enable_transformers)
         self.store = ReportStore(settings.sqlite_path, enabled=settings.persistence_enabled)

@@ -3,9 +3,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-import nltk
-
-
 DEFAULT_ABBREVIATIONS = {
     "bp": "blood pressure",
     "hr": "heart rate",
@@ -50,13 +47,15 @@ class MedicalTextPreprocessor:
 
     def tokenize(self, text: str) -> list[str]:
         try:
+            import nltk
             return nltk.word_tokenize(text)
-        except LookupError:
+        except (ImportError, LookupError):
             return re.findall(r"[A-Za-z0-9_./%-]+", text)
 
     def remove_stopwords(self, tokens: list[str]) -> list[str]:
         try:
+            import nltk
             stopwords = set(nltk.corpus.stopwords.words("english"))
-        except LookupError:
+        except (ImportError, LookupError):
             stopwords = {"the", "a", "an", "of", "and", "or", "to", "in", "is"}
         return [tok for tok in tokens if tok.lower() not in stopwords]

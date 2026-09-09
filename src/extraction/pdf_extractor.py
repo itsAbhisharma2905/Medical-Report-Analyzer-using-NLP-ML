@@ -4,8 +4,6 @@ import shutil
 import tempfile
 from pathlib import Path
 
-import pdfplumber
-
 from src.utils import get_logger
 
 log = get_logger(__name__)
@@ -22,8 +20,9 @@ class OCRUnavailableError(RuntimeError):
 class PDFExtractor:
     """Extract text from digital PDFs and optionally try OCR for image-only pages."""
 
-    def __init__(self, enable_ocr: bool = True) -> None:
+    def __init__(self, enable_ocr: bool = True, use_pdfplumber: bool = True) -> None:
         self.enable_ocr = enable_ocr
+        self.use_pdfplumber = use_pdfplumber
 
     def extract(self, pdf_path: str | Path) -> str:
         path = Path(pdf_path)
@@ -32,7 +31,11 @@ class PDFExtractor:
         if path.suffix.lower() != ".pdf":
             raise ValueError("Only PDF files are supported by PDFExtractor")
 
-        text = self._extract_with_pdfplumber(path)
+        text = (
+            self._extract_with_pdfplumber(path)
+            if self.use_pdfplumber
+            else self._extract_with_pypdf(path)
+        )
         if len(text.strip()) > 50:
             return text
 
@@ -52,6 +55,8 @@ class PDFExtractor:
     def _extract_with_pdfplumber(self, path: Path) -> str:
         chunks: list[str] = []
         try:
+            import pdfplumber
+
             with pdfplumber.open(path) as pdf:
                 for i, page in enumerate(pdf.pages, start=1):
                     page_text = page.extract_text(x_tolerance=1, y_tolerance=3) or ""
@@ -59,6 +64,20 @@ class PDFExtractor:
                         chunks.append(f"\n[page {i}]\n{page_text}")
         except Exception as exc:
             log.warning("pdfplumber failed for %s: %s", path.name, exc)
+        return "\n".join(chunks).strip()
+
+    def _extract_with_pypdf(self, path: Path) -> str:
+        chunks: list[str] = []
+        try:
+            from pypdf import PdfReader
+
+            reader = PdfReader(path)
+            for i, page in enumerate(reader.pages, start=1):
+                page_text = page.extract_text() or ""
+                if page_text.strip():
+                    chunks.append(f"\n[page {i}]\n{page_text}")
+        except Exception:
+            log.warning("lightweight PDF text extraction failed")
         return "\n".join(chunks).strip()
 
     def _extract_with_ocr(self, path: Path) -> str:

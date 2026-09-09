@@ -35,9 +35,9 @@ MAX_UPLOAD_MB=25
 
 ## Build and model dependencies
 
-`requirements-vercel.txt` contains only the FastAPI request path, PDF extraction, optional OCR Python bindings, NLTK, spaCy, and the pinned `en_core_web_sm` 3.8.0 wheel. The `en_core_web_sm` model is installed at build time, not downloaded during a request. The full `requirements.txt` remains the local/Docker environment and still includes Streamlit, training, evaluation, and optional transformer dependencies.
+`requirements-vercel.txt` contains only FastAPI, Pydantic, multipart uploads, and the lightweight `pypdf` text extractor. On Vercel, the existing rule-based NER path is used without spaCy; this avoids packaging NumPy, Thinc, Blis, and `en_core_web_sm` while retaining the project's deterministic medical terminology extraction. The full `requirements.txt` remains the local/Docker environment and still includes Streamlit, training, evaluation, spaCy, PDF/OCR, and optional transformer dependencies.
 
-Transformer NER (`d4data/biomedical-ner-all`) and transformer summarization (`sshleifer/distilbart-cnn-12-6`) remain disabled by default. They are not installed in the Vercel dependency set because they add large downloads and startup/memory cost. The optional `en_core_sci_sm` model is also not bundled; if it is unavailable, the existing code continues with rules plus the English spaCy pipeline.
+Transformer NER (`d4data/biomedical-ner-all`) and transformer summarization (`sshleifer/distilbart-cnn-12-6`) remain disabled by default. They are not installed in the Vercel dependency set because they add large downloads and startup/memory cost. The optional `en_core_sci_sm` and `en_core_web_sm` models are not bundled on Vercel; local/Docker execution continues to load them when available.
 
 ## API endpoints
 
@@ -79,7 +79,7 @@ With persistence disabled, `/summary` and `/entities` cannot retrieve a report a
 
 ## OCR limitation
 
-Digital PDFs with a usable text layer continue to work without Tesseract. Vercel's normal Python runtime does not provide the Tesseract executable, so OCR defaults to disabled there. A scanned/image-only PDF returns a controlled `422` error explaining that OCR is unavailable or disabled; the API does not fabricate text. Docker still installs `tesseract-ocr`, and local OCR remains enabled by default.
+Digital PDFs with a usable text layer continue to work without Tesseract through `pypdf`. Vercel's normal Python runtime does not provide the Tesseract executable, so OCR defaults to disabled there and its PyMuPDF/Pillow/pytesseract dependencies are not installed. A scanned/image-only PDF returns a controlled `422` error explaining that OCR is unavailable or disabled; the API does not fabricate text. Docker still installs `tesseract-ocr`, and local OCR remains enabled by default through the full `requirements.txt`.
 
 ## Validation
 

@@ -30,14 +30,16 @@ class HybridMedicalNER:
         scispacy_model: str = "en_core_sci_sm",
         transformer_model: str | None = None,
         enable_transformers: bool = False,
+        enable_spacy: bool = True,
     ) -> None:
-        self.nlp = self._load_spacy(spacy_model)
-        self.sci_nlp = self._load_spacy(scispacy_model, quiet=True)
+        self.nlp = self._load_spacy(spacy_model) if enable_spacy else None
+        self.sci_nlp = self._load_spacy(scispacy_model, quiet=True) if enable_spacy else None
         self.transformer = self._load_transformer(transformer_model) if enable_transformers and transformer_model else None
 
     def extract(self, text: str) -> dict:
         entities = self._rule_entities(text)
-        entities.extend(self._spacy_entities(text))
+        if self.nlp:
+            entities.extend(self._spacy_entities(text))
         if self.sci_nlp:
             entities.extend(self._scispacy_entities(text))
         if self.transformer:

@@ -13,3 +13,7 @@ reports/*.pdf
 reports/*.json
 reports/figures/*.png
 !.gitkeep
+frontend-web/node_modules/
+frontend-web/dist/
+frontend-web/.env*
+!frontend-web/.env.example

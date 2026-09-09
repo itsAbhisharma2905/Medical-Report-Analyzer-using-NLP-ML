@@ -1,0 +1,14 @@
+# Runtime-only dependencies for the FastAPI function on Vercel's Python 3.12 runtime.
+# Transformer NER/summarization and the training/UI stack remain opt-in/local.
+fastapi==0.136.3
+pydantic==2.13.4
+python-multipart==0.0.29
+
+spacy==3.8.14
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+nltk==3.9.4
+
+pdfplumber==0.11.9
+PyMuPDF==1.27.2.3
+pytesseract==0.3.13
+Pillow==12.2.0

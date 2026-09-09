@@ -24,7 +24,7 @@ class MedicalReportAnalyzer:
             enable_transformers=settings.enable_transformers,
         )
         self.summarizer = MedicalSummarizer(settings.summarizer_model, settings.enable_transformers)
-        self.store = ReportStore(settings.sqlite_path)
+        self.store = ReportStore(settings.sqlite_path, enabled=settings.persistence_enabled)
 
     def analyze_text(self, text: str, source_name: str | None = None, persist: bool = True) -> dict:
         cleaned = self.prep.clean(text)
@@ -45,14 +45,19 @@ class MedicalReportAnalyzer:
                 "privacy": "raw patient identifiers are redacted from analysis output",
             },
         }
-        if persist:
+        if persist and self.store.enabled:
             payload["report_id"] = self.store.save(payload, source_name, patient_hash)
         return payload
 
-    def analyze_pdf(self, pdf_path: str | Path, persist: bool = True) -> dict:
+    def analyze_pdf(
+        self,
+        pdf_path: str | Path,
+        persist: bool = True,
+        source_name: str | None = None,
+    ) -> dict:
         path = Path(pdf_path)
         text = self.extractor.extract(path)
-        return self.analyze_text(text, source_name=path.name, persist=persist)
+        return self.analyze_text(text, source_name=source_name or path.name, persist=persist)
 
     def export_json(self, payload: dict, path: str | Path) -> None:
         Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")

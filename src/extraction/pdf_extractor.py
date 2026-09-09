@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -11,6 +12,10 @@ log = get_logger(__name__)
 
 
 class PDFExtractionError(RuntimeError):
+    pass
+
+
+class OCRUnavailableError(RuntimeError):
     pass
 
 
@@ -33,10 +38,15 @@ class PDFExtractor:
 
         if self.enable_ocr:
             log.info("PDF text layer was sparse; trying OCR fallback for %s", path.name)
-            ocr_text = self._extract_with_ocr(path)
+            try:
+                ocr_text = self._extract_with_ocr(path)
+            except OCRUnavailableError as exc:
+                raise PDFExtractionError(str(exc)) from exc
             if ocr_text.strip():
                 return ocr_text
 
+        if not self.enable_ocr:
+            raise PDFExtractionError("Could not extract useful text from PDF because OCR is disabled")
         raise PDFExtractionError("Could not extract useful text from PDF")
 
     def _extract_with_pdfplumber(self, path: Path) -> str:
@@ -52,24 +62,33 @@ class PDFExtractor:
         return "\n".join(chunks).strip()
 
     def _extract_with_ocr(self, path: Path) -> str:
+        if shutil.which("tesseract") is None:
+            raise OCRUnavailableError(
+                "OCR is unavailable because the Tesseract executable is not installed"
+            )
         try:
             import fitz
             import pytesseract
             from PIL import Image
         except Exception as exc:
-            log.warning("OCR dependencies are missing: %s", exc)
-            return ""
+            log.warning("OCR dependencies are unavailable")
+            raise OCRUnavailableError("OCR dependencies are not installed") from exc
+
+        try:
+            pytesseract.get_tesseract_version()
+        except Exception as exc:
+            raise OCRUnavailableError("OCR is unavailable because Tesseract could not be started") from exc
 
         text_parts: list[str] = []
         with tempfile.TemporaryDirectory() as tmp:
-            doc = fitz.open(path)
-            for page_no in range(len(doc)):
-                pix = doc[page_no].get_pixmap(dpi=220)
-                image_path = Path(tmp) / f"page-{page_no + 1}.png"
-                pix.save(image_path)
-                try:
-                    image = Image.open(image_path)
-                    text_parts.append(pytesseract.image_to_string(image))
-                except Exception as exc:
-                    log.warning("OCR failed on page %s: %s", page_no + 1, exc)
+            with fitz.open(path) as doc:
+                for page_no in range(len(doc)):
+                    pix = doc[page_no].get_pixmap(dpi=220)
+                    image_path = Path(tmp) / f"page-{page_no + 1}.png"
+                    pix.save(image_path)
+                    try:
+                        with Image.open(image_path) as image:
+                            text_parts.append(pytesseract.image_to_string(image))
+                    except Exception:
+                        log.warning("OCR failed on page %s", page_no + 1)
         return "\n".join(text_parts).strip()

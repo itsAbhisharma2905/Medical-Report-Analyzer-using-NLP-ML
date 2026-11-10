@@ -1,236 +1,122 @@
-# Medical Report Analyzer using NLP & Machine Learning
+# Medical Report Analyzer
 
-This project analyzes unstructured medical reports and produces an easy-to-read clinical summary, extracted medical entities, confidence/explainability records, JSON output, and optional database storage.
+A Python-based application for extracting, processing, and analysing information from medical documents using document processing, OCR, and NLP techniques.
 
-## What It Does
+## Overview
 
-- Extracts text from PDF reports
-- Supports OCR fallback for scanned PDFs
-- Cleans and anonymizes medical text
-- Extracts symptoms, diagnoses, medicines, tests, observations, dates, and patient details
-- Generates a readable medical summary
-- Provides a Streamlit dashboard
-- Provides a FastAPI backend
-- Trains and evaluates a medical specialty classifier
-- Stores structured results in SQLite
-- Generates metrics, confusion matrix, and technical report files
+Medical Report Analyzer explores automated medical document processing. The application is designed to extract useful information from uploaded reports and present it in a more structured and understandable format.
 
-## Clean Project Structure
+It combines document extraction, OCR fallback, text processing, and report analysis.
 
-```text
-medical-report-analyzer/
-|-- api/                    FastAPI backend
-|-- data/
-|   |-- raw/                Kaggle CSV dataset
-|   |-- processed/          train/valid/test CSV files
-|   `-- samples/            sample medical report text
-|-- docs/                   setup, architecture, privacy, API notes
-|-- frontend/               Streamlit dashboard
-|-- models/                 trained ML model
-|-- reports/                metrics, figures, technical PDF
-|-- src/                    main NLP/ML source code
-|-- tests/                  pytest tests
-|-- app.py                  FastAPI entry point
-|-- main.py                 command-line analyzer
-|-- config.py               project settings
-|-- requirements.txt
-|-- Dockerfile
-`-- docker-compose.yml
+## Features
+
+- Medical document upload and processing
+- PDF text extraction
+- OCR fallback for scanned documents
+- Text preprocessing
+- Medical entity extraction
+- Report summarisation
+- Structured information presentation
+- Application interface using Streamlit
+- API functionality using FastAPI
+- Database integration where configured
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Language | Python |
+| Interface | Streamlit |
+| Backend | FastAPI |
+| Document Processing | PyPDF2 / configured PDF libraries |
+| OCR | Tesseract / pytesseract |
+| Image Processing | OpenCV, Pillow |
+| NLP | Configured NLP libraries |
+| Database | SQLite |
+
+## Processing Workflow
+
+1. User uploads a supported medical document.
+2. The system attempts PDF text extraction.
+3. OCR is used when the document requires image-based text extraction.
+4. Extracted text is cleaned and processed.
+5. The configured NLP components identify relevant information.
+6. The application presents the processed output.
+
+## Installation
+
+```bash
+git clone YOUR_REPOSITORY_URL
+cd YOUR_PROJECT_FOLDER
 ```
 
-Do not submit `.venv`, `.pytest_cache`, `__pycache__`, or runtime database files. They are ignored and can be recreated.
+Create a virtual environment:
 
-## 1. Install
+```bash
+python -m venv venv
+```
 
-Open PowerShell in this folder:
+Windows activation:
 
-```powershell
-cd "d:\ALL PROJECTS\COuntryedu\Assignment 2\medical-report-analyzer"
-python -m venv .venv
-.\.venv\Scripts\activate
+```bash
+venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
 ```
 
-Optional OCR requirement:
+Configure required environment variables using `.env.example`, if provided.
 
-- Install Tesseract OCR and add it to PATH.
+## Running the Application
 
-## 2. Run Streamlit App
+For Streamlit:
 
-```powershell
-streamlit run frontend/streamlit_app.py
+```bash
+streamlit run app.py
 ```
 
-Open:
+For FastAPI, use the actual application module configured in the project:
 
-```text
-http://localhost:8501
+```bash
+uvicorn YOUR_MODULE:app --reload
 ```
 
-Use the dashboard to paste report text or upload a PDF. The app shows:
+Replace the example module with the real application entry point.
 
-- Report Summary
-- Patient Details
-- Clinical Findings
-- Confidence and Explainability
-- Export buttons for summary and JSON
+## Evaluation
 
-JSON is kept in the Export tab because it is mainly for backend/API/database use. Normal users should read the summary and findings tabs.
+Document the following using actual experiments:
 
-If Streamlit shows a Torch watcher error like `Tried to instantiate class '__path__._path'`, restart the app. The project includes `.streamlit/config.toml` with file watching disabled to avoid this PyTorch/Streamlit issue.
+- Supported document formats
+- Extraction success rate
+- OCR quality
+- Entity extraction precision and recall
+- Classification metrics, if a classifier is implemented
+- Processing time
 
-## 3. Run API
+Do not interpret sample outputs as clinically validated results.
 
-```powershell
-uvicorn app:app --reload
-```
+## Privacy and Safety
 
-Open:
+- Do not upload identifiable patient documents to a public demonstration.
+- Use synthetic or anonymised sample data.
+- Protect uploaded files and sensitive information.
+- This application is an educational software project, not a replacement for professional medical advice, diagnosis, or treatment.
 
-```text
-http://127.0.0.1:8000/docs
-```
+## Future Improvements
 
-Main endpoints:
+- Improved OCR accuracy
+- Better medical terminology recognition
+- Structured report comparison
+- Document quality assessment
+- Automated testing
+- Stronger privacy controls
 
-- `GET /health`
-- `POST /analyze`
-- `POST /upload-report`
-- `GET /summary`
-- `GET /entities`
+## Author
 
-## 4. Run From Command Line
+Abhi Sharma
 
-```powershell
-python main.py --text "Patient has fever, cough and pneumonia. BP 140/90. Amoxicillin 500 mg advised."
-```
-
-For PDF:
-
-```powershell
-python main.py --pdf data/samples/report.pdf --out reports/analysis.json
-```
-
-## 5. Dataset
-
-Dataset used:
-
-```text
-https://www.kaggle.com/datasets/tboyle10/medicaltranscriptions
-```
-
-Put the downloaded CSV here:
-
-```text
-data/raw/mtsamples.csv
-```
-
-Or configure Kaggle API and let the loader download it.
-
-For a detailed explanation of the dataset columns, preprocessing steps, label filtering, TF-IDF, and evaluation process, read:
-
-```text
-docs/dataset_and_preprocessing_explanation.md
-```
-
-For a clear explanation of the full NLP workflow from PDF/text input to extracted entities and summary, read:
-
-```text
-docs/nlp_workflow_explanation.md
-```
-
-For the workflow architecture diagram, read:
-
-```text
-docs/workflow_architecture_diagram.md
-```
-
-Technical documentation is available in both Markdown and PDF:
-
-```text
-docs/technical_report.md
-reports/technical_report.pdf
-```
-
-## 6. Train Classifier With 60-80% Accuracy Target
-
-The original dataset has 40 imbalanced labels, including labels with only 1-3 test samples. A fair 40-class model stays around 30-35% accuracy with classical ML.
-
-For a stronger and more realistic assignment benchmark, this project trains on the most frequent specialties by default.
-
-Recommended 5-class benchmark, currently around 65% accuracy:
-
-```powershell
-python -m src.training.dataset_loader --csv data/raw/mtsamples.csv --include-keywords --top-labels 5
-python -m src.training.train_classifier
-python -m src.evaluation.evaluate_classifier
-```
-
-Higher 3-class benchmark, usually around 80% accuracy:
-
-```powershell
-python -m src.training.dataset_loader --csv data/raw/mtsamples.csv --include-keywords --top-labels 3
-python -m src.training.train_classifier
-python -m src.evaluation.evaluate_classifier
-```
-
-Full 40-label benchmark:
-
-```powershell
-python -m src.training.dataset_loader --csv data/raw/mtsamples.csv --include-keywords --top-labels 0
-python -m src.training.train_classifier
-python -m src.evaluation.evaluate_classifier
-```
-
-Generated files:
-
-- `models/specialty_classifier.joblib`
-- `models/specialty_classifier.metrics.json`
-- `reports/classifier_metrics.json`
-- `reports/figures/confusion_matrix.png`
-
-## 7. Current Saved Model Result
-
-The saved classifier was trained with:
-
-```text
---include-keywords --top-labels 5
-```
-
-Latest test result:
-
-```text
-Accuracy: 0.65
-Weighted F1: 0.66
-Macro F1: 0.62
-```
-
-This satisfies the requested 60-80% range without fabricating the full 40-class result.
-
-## 8. Generate Technical PDF
-
-```powershell
-python -m src.evaluation.generate_report
-```
-
-Outputs:
-
-- `docs/technical_report.md`
-- `reports/technical_report.pdf`
-
-## 9. Run Tests
-
-```powershell
-pytest
-```
-
-## 10. Docker
-
-```powershell
-docker compose up --build
-```
-
-## Important Note
-
-This project is for education, research, and engineering demonstration. It is not a medical device. A qualified medical professional must validate clinical outputs before real-world use.
+GitHub: https://github.com/itsAbhisharma2905
